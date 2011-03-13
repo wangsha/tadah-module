@@ -1,0 +1,88 @@
+<?php
+
+/**
+ * Implements hook_schema().
+ */
+function tadah_gift_schema() {
+  $schema = array();
+
+  $schema['tadah_gift'] = array(
+    'description' => 'The base table for gifts.',
+    'fields' => array(
+      'gift_id' => array(
+        'description' => 'The primary identifier for an gift.',
+        'type' => 'serial',
+        // 'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'name' => array(
+        'description' => 'Name of the gift.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'price' => array(
+        'description' => 'Price of the gift.',
+        'type' => 'int',
+        'not null' => TRUE,
+      ),
+      'picture_url' => array(
+        'description' => 'URL of picture of the gift.',
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'detail_url' => array(
+        'description' => 'URL for detail of the gift.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'surprise_index' => array(
+        'description' => 'Surprise index of the gift.',
+        'type' => 'int',
+        'not null' => TRUE,
+      ),
+      'description' => array(
+        'description' => 'Description of the gift.',
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+/*
+      'type' => array(
+        'description' => 'The type of this gift.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'created' => array(
+        'description' => 'The Unix timestamp when the order was created.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'changed' => array(
+        'description' => 'The Unix timestamp when the order was most recently saved.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'data' => array(
+        'type' => 'blob',
+        'not null' => FALSE,
+        'size' => 'big',
+        'serialize' => TRUE,
+        'description' => 'A serialized array of additional data.',
+      ),
+*/
+    ),
+    'primary key' => array('gift_id'),
+    'unique keys' => array(
+      'name' => array('name'),
+      'detail_url' => array('detail_url'),
+    ),
+  );
+
+  return $schema;
+}
+

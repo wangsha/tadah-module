@@ -1,0 +1,46 @@
+<?php
+function tadah_gift_entity_info() {
+  $return = array(
+    'tadah_gift' => array(
+      'label' => t('Gift', array(), array('context' => 'a tadah gift')),
+      // 'controller class' => 'CommerceOrderEntityController',
+      'base table' => 'tadah_gift',
+      // 'fieldable' => TRUE,
+      'entity keys' => array(
+        'id' => 'order_id',
+        'bundle' => 'type',
+        'label' => 'name',
+      ),
+      /*
+      'bundle keys' => array(
+        'bundle' => 'type',
+      ),
+      'bundles' => array(
+        'commerce_order' => array(
+          'label' => t('Order', array(), array('context' => 'a drupal commerce order')),
+        ),
+      ),
+       */
+      'view modes' => array(
+        'full' => array(
+          'label' => t('Full content'),
+          'custom settings' => FALSE,
+        ),
+        /*
+        'administrator' => array(
+          'label' => t('Administrator'),
+          'custom settings' => FALSE,
+        ),
+        'customer' => array(
+          'label' => t('Customer'),
+          'custom settings' => FALSE,
+        ),
+         */
+      ),
+    ),
+  );
+
+  return $return;
+
+}
+?>
