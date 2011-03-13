@@ -40,7 +40,7 @@ function tadah_gift_schema() {
       'surprise_index' => array(
         'description' => 'Surprise index of the gift.',
         'type' => 'int',
-        'not null' => TRUE,
+        'default' => 0,
       ),
       'description' => array(
         'description' => 'Description of the gift.',

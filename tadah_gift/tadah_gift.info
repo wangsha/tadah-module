@@ -1,5 +1,5 @@
 name = Gift
 description = Defines the Gift entity
 package = Tadah
-; dependencies[] = entity
+dependencies[] = devel
 core = 7.x
