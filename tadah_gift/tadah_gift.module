@@ -8,19 +8,23 @@ function tadah_gift_entity_info() {
       // 'fieldable' => TRUE,
       'entity keys' => array(
         'id' => 'order_id',
-        'bundle' => 'type',
         'label' => 'name',
       ),
       /*
       'bundle keys' => array(
         'bundle' => 'type',
       ),
+       */
       'bundles' => array(
-        'commerce_order' => array(
-          'label' => t('Order', array(), array('context' => 'a drupal commerce order')),
+        'tadah_gift' => array(
+          'label' => t('Gift', array(), array('context' => 'a tadah gift')),
+          'admin' => array(
+            'path' => 'admin/structure/tadah_gift/manage',
+            'access arguments' => array('administer gifts'),
+          ),
+          // 'admin' blah blah
         ),
       ),
-       */
       'view modes' => array(
         'full' => array(
           'label' => t('Full content'),
@@ -41,6 +45,88 @@ function tadah_gift_entity_info() {
   );
 
   return $return;
-
 }
+
+function tadah_gift_uri($gift){
+  return array(
+    'path' => 'gift/' . $gift->id,
+  );
+}
+
+function tadah_gift_load($gift_id = NULL, $reset = FALSE){
+  $gift_ids = (isset ($gift_id) ? array($gift_id) : array());
+  $tadah_gift = tadah_gift_load_multiple($gift_ids, $reset);
+  return $tadah_gift ? reset ($tadah_gift) : FALSE;
+}
+
+function tadah_gift_load_multiple($gift_ids = array(), $conditions = array(), $reset = FALSE){
+  return entity_load('tadah_gift', $gift_ids, $conditions, $reset);
+}
+
+function tadah_gift_menu(){
+  $items['admin/structure/tadah_gift/manage'] = array(
+    'title' => 'tadah_gift Admin',
+    'description' => 'Manage tadah_gift structure',
+    'page callback' => 'tadah_gift_info',
+    'access arguments' => array('administer tadah_gifts'),
+  );
+  $items['tadah_gift/%tadah_gift'] = array(
+    'title callback' => 'tadah_gift_page_title',
+    'title arguments' => array(1),
+    'page callback' => 'tadah_gift_page_view',
+    'page arguments' => array(1),
+    'access arguments' => array('view tadah_gifts'),
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+function tadah_gift_permission(){
+    return array(
+    'administer tadah_gifts' =>  array(
+      'title' => t('Administer tadah_gifts'),
+      'restrict access' => TRUE,
+    ),
+    'view postsits' => array(
+      'title' => t('View tadah_gifts'),
+    )
+  );
+}
+
+
+function tadah_gift_info() {
+  return ('Welcome to the administration page for your tadah_gifts!');
+}
+
+function tadah_gift_page_title($tadah_gift){
+  return $tadah_gift->gift_id;
+}
+
+function tadah_gift_page_view($tadah_gift, $view_mode = 'full'){
+  $tadah_gift->content = array();
+
+  // Build fields content.
+  field_attach_prepare_view('tadah_gift', array($tadah_gift->gift_id => $tadah_gift), $view_mode);
+  entity_prepare_view('tadah_gift', array($tadah_gift->gift_id => $tadah_gift));
+  $tadah_gift->content += field_attach_view('tadah_gift', $tadah_gift, $view_mode);
+
+  return $tadah_gift->content;
+}
+
+
+function tadah_gift_field_extra_fields() {
+  $return = array();
+  $return['tadah_gift']['tadah_gift'] = array(
+    'form' => array(
+      'note' => array(
+        'label' => t('Note'),
+        'description' => t('tadah_gift Note'),
+      ),
+    ),
+  );
+
+  return $return;
+}
+
+
 ?>
