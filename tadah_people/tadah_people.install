@@ -1,7 +1,7 @@
 <?php
 
 function tadah_people_schema() {
-	$schema = array();
+  $schema = array();
 
   $schema['tadah_people'] = array(
     'description' => 'The base table for people.',
@@ -21,7 +21,7 @@ function tadah_people_schema() {
       'first_name' => array(
         'description' => 'First name',
         'type' => 'varchar',
-      	'length' => 225,
+        'length' => 225,
         'not null' => TRUE,
       ),
       'last_name' => array(
@@ -44,29 +44,29 @@ function tadah_people_schema() {
         'description' => 'City',
         'type' => 'varchar',
         'length' => 128,
-      	'not null' => TRUE,
+        'not null' => TRUE,
       ),
       'state' => array(
         'description' => 'State',
         'type' => 'varchar',
         'length' => 128,
-      	'not null' => TRUE,
+        'not null' => TRUE,
       ),
       'country' => array(
         'description' => 'Country',
         'type' => 'varchar',
         'length' => 128,
-      	'not null' => TRUE,
+        'not null' => TRUE,
       ),
       'postal_code' => array(
         'description' => 'Postal Code',
         'type' => 'varchar',
         'length' => 16,
-      	'not null' => TRUE,
+        'not null' => TRUE,
       ),
       'interests' => array(
-      	'description' => 'User interest (a list of tags)',
-      	'type' => 'text',
+        'description' => 'User interest (a list of tags)',
+        'type' => 'text',
       ),
       'aboutme' => array(
         'description' => 'Short self description',
@@ -74,23 +74,23 @@ function tadah_people_schema() {
         'length' => 255,
       ),
       'deleted' => array(
-      	'description' => 'Flag for deleted user',
-      	'type' => 'int',
-      	'size' => 'tiny',
-      	'not null' => true,
-      	'default' => 0,
+        'description' => 'Flag for deleted user',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => true,
+        'default' => 0,
       ),
       'surprising_index' =>  array(
-      	'description' => 'The surprising level of user\'s gifts',
-      	'type' => 'int',
-      	'not null' => true,
-      	'default' => 0,
+        'description' => 'The surprising level of user\'s gifts',
+        'type' => 'int',
+        'not null' => true,
+        'default' => 0,
       ),
       'deposit' => array(
-      	'description' => 'Amont of money deposited',
-      	'type' => 'float',
-      	'not null' => true,
-      	'default' => 0,
+        'description' => 'Amont of money deposited',
+        'type' => 'float',
+        'not null' => true,
+        'default' => 0,
       ),
     ),
     'primary key' => array('uid'),
@@ -98,7 +98,7 @@ function tadah_people_schema() {
       'nick_name' => array('nick_name'),
     ),
     'indexes' => array(
-    	'interests' => array(array('interests', 100)), //speed up matching
+      'interests' => array(array('interests', 100)), //speed up matching
     ),
   );
 
