@@ -1,2 +1,107 @@
-<?php 
-$newline;
+<?php
+
+function tadah_people_schema() {
+	$schema = array();
+
+  $schema['tadah_people'] = array(
+    'description' => 'The base table for people.',
+    'fields' => array(
+      'uid' => array(
+        'description' => 'User drupal id',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'nick_name' => array(
+        'description' => 'Display name',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'first_name' => array(
+        'description' => 'First name',
+        'type' => 'varchar',
+      	'length' => 225,
+        'not null' => TRUE,
+      ),
+      'last_name' => array(
+        'description' => 'Last name',
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'address1' => array(
+        'description' => 'Address first line',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'address2' => array(
+        'description' => 'Address second line',
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'city' => array(
+        'description' => 'City',
+        'type' => 'varchar',
+        'length' => 128,
+      	'not null' => TRUE,
+      ),
+      'state' => array(
+        'description' => 'State',
+        'type' => 'varchar',
+        'length' => 128,
+      	'not null' => TRUE,
+      ),
+      'country' => array(
+        'description' => 'Country',
+        'type' => 'varchar',
+        'length' => 128,
+      	'not null' => TRUE,
+      ),
+      'postal_code' => array(
+        'description' => 'Postal Code',
+        'type' => 'varchar',
+        'length' => 16,
+      	'not null' => TRUE,
+      ),
+      'interests' => array(
+      	'description' => 'User interest (a list of tags)',
+      	'type' => 'text',
+      ),
+      'aboutme' => array(
+        'description' => 'Short self description',
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'deleted' => array(
+      	'description' => 'Flag for deleted user',
+      	'type' => 'int',
+      	'size' => 'tiny',
+      	'not null' => true,
+      	'default' => 0,
+      ),
+      'surprising_index' =>  array(
+      	'description' => 'The surprising level of user\'s gifts',
+      	'type' => 'int',
+      	'not null' => true,
+      	'default' => 0,
+      ),
+      'deposit' => array(
+      	'description' => 'Amont of money deposited',
+      	'type' => 'float',
+      	'not null' => true,
+      	'default' => 0,
+      ),
+    ),
+    'primary key' => array('uid'),
+    'unique keys' => array(
+      'nick_name' => array('nick_name'),
+    ),
+    'indexes' => array(
+    	'interests' => array(array('interests', 100)), //speed up matching
+    ),
+  );
+
+  return $schema;
+}
+?>

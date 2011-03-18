@@ -1,1 +1,285 @@
-<?php ?>
+<?php
+
+require_once drupal_get_path("module","tadah_people")."/tadah_people_api.php";
+
+define('TADAH_PEOPLE_MODULE_NAME', 'tadah_people');
+
+function tadah_people_entity_info() {
+  $return = array(
+    'tadah_people' => array(
+      'label' => t('Tadah People', array(), array('context' => 'a tadah user')),
+      'base table' => 'tadah_people',
+      'entity keys' => array(
+        'id' => 'uid',
+        'label' => 'User Name',
+      ),
+      /*
+      'bundle keys' => array(
+        'bundle' => 'type',
+      ),
+       */
+      'bundles' => array(
+        'tadah_people' => array(
+          'label' => t('People', array(), array('context' => 'a tadah user')),
+          'admin' => array(
+            'path' => 'admin/structure/tadah_people/manage',
+            'access arguments' => array('administer tadah people'),
+          ),
+        ),
+      ),
+      'view modes' => array(
+        'private' => array(
+          'label' => t('Private profile view'),
+          'custom settings' => FALSE,
+        ),
+        'own' => array(
+          'label' => t('Public profile view'),
+          'custom settings' => FALSE,
+        ),
+      ),
+    ),
+  );
+  return $return;
+}
+
+/**
+ * Implements hook_permission
+ */
+function tadah_people_permission(){
+    return array(
+    	'view user profile' => array(
+      	'title' => t('View user profile'),
+    	)
+  	);
+}
+
+
+/**
+ * Implements hook_user_view_alter
+ * Add additional information to user profile view page
+ */
+function tadah_people_user_view_alter(&$build) {
+
+	$uid = $build['#account']->uid;
+	$profile = tadah_people_get_profile($uid);
+	$build['#tadah_profile'] = $profile;
+	$build['#post_render'][] = 'tadah_people_user_post_render';	
+	
+}
+
+/**
+ * Insert user information and return a markup
+ */
+function tadah_people_user_post_render(&$html, &$build) {
+	$user = $build['#account']; //object
+	$profile = $build['#tadah_profile']; //array
+	return $html;
+}
+
+/**
+ * Attach additional elements into profile form
+ */
+function tadah_people_form_user_profile_form_alter(&$form, &$form_state) {
+	$uid = $form['#user']->uid;
+	tadah_people_attach_form($form, $form_state, $uid);
+}
+
+/**
+ * Implements hook_validate
+ * Ensure unique nick name
+ */
+function tadah_peope_validate_nickname($element, &$form_state) {
+	//check duplicate user name
+	$nid = db_select('tadah_people', 'p')
+		->fields('p', array('uid'))
+		->condition('nick_name', $element['#value'])
+		->condition('deleted', 0)
+		->execute()
+		->fetchField();
+   if (!empty($nid)) {
+     form_error($element, t('Nick name exisits, please choose another one.'));
+   }
+}
+
+/**
+ * Attach tadah_people elements
+ */
+function tadah_people_attach_form(&$form, &$form_state, $uid = NULL) {
+	//fetch user info
+	$user = array();
+	if(!empty($uid)) {
+		$user = tadah_people_get_profile($uid);
+	}
+	$form['tadah_people'] = array(
+  	'#type' => 'fieldset',
+  	'#title' => 'Tadah Profile'
+  );
+  
+  $form['tadah_people']['nick_name'] = array(
+  	'#type' => 'textfield',
+  	'#title' => 'Nick Name (Display Name)',
+  	'#required' => true,
+  	'#element_validate' => array('tadah_peope_validate_nickname'),
+  	'#default_value' => $user['nick_name'],
+  	'#prefix'=> '<table><tr><td>',
+  	'#suffix'=> '</td><td></td></tr>',
+  );
+  
+  $form['tadah_people']['first_name'] = array(
+  	'#type' => 'textfield',
+  	'#title' => 'First Name',
+  	'#default_value' => $user['first_name'],
+  	'#required' => true,  	
+  	'#prefix'=> '<tr><td>',
+  	'#suffix'=> '</td>',
+  );
+  
+  $form['tadah_people']['last_name'] = array(
+  	'#type' => 'textfield',
+  	'#title' => 'Last Name',
+  	'#default_value' => $user['last_name'],
+  	'#required' => true,
+   	'#prefix'=> '<td>',
+  	'#suffix'=> '</td></tr>',
+  );
+  
+  $form['tadah_people']['address1'] = array(
+  	'#type' => 'textfield',
+  	'#title' => 'Address 1',
+  	'#required' => true,
+  	'#default_value' => $user['address1'],
+  	'#prefix'=> '<tr><td>',
+  	'#suffix'=> '</td>',
+  );
+  
+  $form['tadah_people']['address2'] = array(
+  	'#type' => 'textfield',
+  	'#title' => 'Address 2',
+  	'#default_value' => $user['address2'],
+  	'#required' => false,
+   	'#prefix'=> '<td>',
+  	'#suffix'=> '</td></tr>',
+  );
+   
+  $form['tadah_people']['city'] = array(
+  	'#type' => 'textfield',
+  	'#title' => 'City',
+  	'#default_value' => $user['city'],
+  	'#required' => true,
+    '#prefix'=> '<tr><td>',
+  	'#suffix'=> '</td>',
+  );
+  
+  $form['tadah_people']['state'] = array(
+  	'#type' => 'textfield',
+  	'#title' => 'State',
+  	'#required' => true,
+  	'#default_value' => $user['state'],
+   	'#prefix'=> '<td>',
+  	'#suffix'=> '</td></tr>',
+  );
+  
+  //get country list
+ if (!function_exists('country_get_list')) {
+    include DRUPAL_ROOT . '/includes/locale.inc';
+  }
+  $form['tadah_people']['country'] = array(
+  	'#type' => 'select',
+  	'#title' => 'Country',
+  	'#required' => true,
+  	'#default_value' => $user['country'],
+  	'#options' => country_get_list(),
+    '#prefix'=> '<tr><td>',
+  	'#suffix'=> '</td>',
+  );
+  
+   $form['tadah_people']['postal_code'] = array(
+  	'#type' => 'textfield',
+  	'#title' => 'Postal Code',
+  	'#default_value' => $user['postal_code'],
+  	'#required' => true,
+   	'#prefix'=> '<td>',
+  	'#suffix'=> '</td></tr>',
+  );
+  
+   $form['tadah_people']['aboutme'] = array(
+  	'#type' => 'textarea',
+  	'#title' => 'About Me',
+  	'#default_value' => $user['aboutme'],
+   	'#prefix'=> '<tr><td>',
+  	'#suffix'=> '</td>',
+  );
+  
+  $form['tadah_people']['interests'] = array(
+  	'#type' => 'textarea',
+  	'#title' => 'Interests',
+  	'#default_value' => $user['interests'],
+   	'#prefix'=> '<td>',
+  	'#suffix'=> '</td></tr></table>',
+  );
+}
+
+/**
+ * Implements hool_user_insert
+ */
+function tadah_people_user_insert(&$edit, $account, $category) {
+	
+  db_insert('tadah_people')
+    ->fields(array(
+    'uid' => $account->uid,
+    'nick_name'  => $edit['nick_name'],
+    'first_name' => $edit['first_name'],
+    'last_name'  => $edit['last_name'],
+    'address1'   => $edit['address1'],
+    'address2'   => $edit['address2'],
+    'city'       => $edit['city'],
+    'state'			 => $edit['state'],
+    'country'		 => $edit['country'],
+    'interests'  => $edit['interests'],
+    'aboutme'		 => $edit['aboutme'],
+    'postal_code'=> $edit['postal_code']
+  ))
+    ->execute();
+    
+}
+/**
+ * Implements hook_user_update
+ */
+function tadah_people_user_update(&$edit, $account, $category) {
+	 db_update('tadah_people')
+  	->fields(array(
+    'nick_name'  => $edit['nick_name'],
+    'first_name' => $edit['first_name'],
+    'last_name'  => $edit['last_name'],
+    'address1'   => $edit['address1'],
+    'address2'   => $edit['address2'],
+    'city'       => $edit['city'],
+    'state'			 => $edit['state'],
+    'country'		 => $edit['country'],
+    'interests'  => $edit['interests'],
+    'aboutme'		 => $edit['aboutme'],
+    'postal_code'=> $edit['postal_code']
+  	))
+    ->condition('uid', $account->uid)
+    ->execute();
+}
+
+/**
+ * Implements hook_user_delete
+ */
+function tadah_people_user_delete($account) {
+  db_update('tadah_people')
+  	->fields(array('deleted' => 1))
+    ->condition('uid', $account->uid)
+    ->execute();
+}
+
+/**
+ * Implements hook_formid_alter
+ * Attach additional fields into registration form
+ */
+function tadah_people_form_user_register_form_alter(&$form, &$form_state) {
+  drupal_set_message('tadah_people_form_user_register_form_alter');
+ 	tadah_people_attach_form($form, $form_state);
+}
+?>
