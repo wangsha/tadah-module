@@ -60,6 +60,26 @@ function tadah_people_menu() {
     'access arguments' => array(TADAH_PEOPLE_PROFILE_VIEW_PERM),
     'type' => MENU_CALLBACK,
   );
+  $items[TADAH_PEOPLE_MODULE_NAME.'/select/%'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('tadah_people_select_form', 2),
+  	'title' => 'Select People',
+    'file' => 'tadah_people.forms.inc',
+    'access callback' => 'user_access',
+    'access arguments' => array(TADAH_PEOPLE_PROFILE_VIEW_PERM),
+    'type' => MENU_CALLBACK,
+  );
+  
+  $items[TADAH_PEOPLE_MODULE_NAME.'/send/%/%'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('tadah_people_send_form', 2,3),
+  	'title' => 'Send!',
+    'file' => 'tadah_people.forms.inc',
+    'access callback' => 'user_access',
+    'access arguments' => array(TADAH_PEOPLE_PROFILE_VIEW_PERM),
+    'type' => MENU_CALLBACK,
+  );
+  
   return $items;
 }
 
