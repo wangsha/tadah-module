@@ -2,7 +2,7 @@
 
 require_once drupal_get_path("module","tadah_people")."/tadah_people_api.php";
 
-define('TADAH_PEOPLE_MODULE_NAME', 'tadah_people');
+require_once drupal_get_path("module","tadah_people")."/tadah_people_constants.php";
 
 function tadah_people_entity_info() {
   $return = array(
@@ -42,15 +42,40 @@ function tadah_people_entity_info() {
   return $return;
 }
 
+function tadah_people_menu() {
+  $items = array();
+  $items[TADAH_PEOPLE_MODULE_NAME] = array(
+    'title' => 'People',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('tadah_people_list_form'),
+    'access callback' => TRUE,
+    'file' => 'tadah_people.forms.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+  $items[TADAH_PEOPLE_MODULE_NAME.'/%tadah_people'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('tadah_people_detail_form', 1),
+    'file' => 'tadah_people.forms.inc',
+    'access callback' => 'user_access',
+    'access arguments' => array(TADAH_PEOPLE_PROFILE_VIEW_PERM),
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+function tadah_people_load($uid = NULL, $reset = FALSE) {
+
+}
+
 /**
  * Implements hook_permission
  */
 function tadah_people_permission(){
-    return array(
-      'view user profile' => array(
+  return array(
+  TADAH_PEOPLE_PROFILE_VIEW_PERM => array(
         'title' => t('View user profile'),
-      )
-    );
+  )
+  );
 }
 
 
@@ -71,8 +96,55 @@ function tadah_people_user_view_alter(&$build) {
  * Insert user information and return a markup
  */
 function tadah_people_user_post_render(&$html, &$build) {
-  $user = $build['#account']; //object
+  $account = $build['#account']; //object
   $profile = $build['#tadah_profile']; //array
+  $picture = $build['user_picture']['#markup'];
+  $expires = tadah_people_get_expiring_record();
+  setlocale(LC_MONETARY, 'en_US');
+  
+  $total_expiring = 0;
+  $html_expiring = '<ul>';
+  foreach($expires as $id => $data) {
+    $days = floor(($data->expire_date - time())/3600/24);
+
+    $html_expiring .= '<li>'. money_format('%i', $data->amount) .' expire in '.$days .' days at '.date("m-d-Y", $data->expire_date). '</li>';
+    $total_expiring += $data->amount;
+  }
+  $html_expiring .= '</ul>';
+  $remaining = $profile['deposit'] - $total_expiring;
+  debug_base($profile, 'build');
+  
+  
+   $html = '<table class="user-details">
+                        <tr>
+                            <td style="width:120px">Nick Name</td>
+                            <td style="width:230px" class="fn nickname"><b>'.$profile['nick_name'].'</b></td>
+                        </tr>
+                        <tr>
+                            <td>About Me</td>
+                            <td><span class="cool" title="2010-04-13 14:01:52Z">'.$profile['aboutme'].'</span></td>
+                        </tr>
+                        <tr>
+                            <td>Interests</td>
+                            <td><span class="supernova"><span title="2011-04-06 22:28:41Z" class="relativetime">'.$profile['interests'].'</span></span></td>
+                        </tr>
+                        
+                        <tr>
+                            <td>Remaining Balance</td>
+                            <td><b>
+                            '. money_format('%i', $remaining).'
+                            </b></td>
+                        </tr>
+                        
+                            
+                        <tr>
+                            <td>Expiring Balance</td>
+                            <td>
+                                '.$html_expiring.'
+                            </td>
+                        </tr>
+                    </table>
+                ';
   return $html;
 }
 
@@ -89,16 +161,19 @@ function tadah_people_form_user_profile_form_alter(&$form, &$form_state) {
  * Ensure unique nick name
  */
 function tadah_peope_validate_nickname($element, &$form_state) {
+  global $user;
+  $uid = $user->uid;
   //check duplicate user name
   $nid = db_select('tadah_people', 'p')
-    ->fields('p', array('uid'))
-    ->condition('nick_name', $element['#value'])
-    ->condition('deleted', 0)
-    ->execute()
-    ->fetchField();
-   if (!empty($nid)) {
-     form_error($element, t('Nick name exisits, please choose another one.'));
-   }
+  ->fields('p', array('uid'))
+  ->condition('nick_name', $element['#value'])
+  ->condition('deleted', 0)
+  ->execute()
+  ->fetchField();
+  debug_base($nid, $uid);
+  if (!empty($nid) && $nid != $uid) {
+    form_error($element, t('Nick name exisits, please choose another one.'));
+  }
 }
 
 /**
@@ -113,9 +188,9 @@ function tadah_people_attach_form(&$form, &$form_state, $uid = NULL) {
   $form['tadah_people'] = array(
     '#type' => 'fieldset',
     '#title' => 'Tadah Profile'
-  );
-  
-  $form['tadah_people']['nick_name'] = array(
+    );
+
+    $form['tadah_people']['nick_name'] = array(
     '#type' => 'textfield',
     '#title' => 'Nick Name (Display Name)',
     '#required' => true,
@@ -123,67 +198,67 @@ function tadah_people_attach_form(&$form, &$form_state, $uid = NULL) {
     '#default_value' => $user['nick_name'],
     '#prefix'=> '<table><tr><td>',
     '#suffix'=> '</td><td></td></tr>',
-  );
-  
-  $form['tadah_people']['first_name'] = array(
+    );
+
+    $form['tadah_people']['first_name'] = array(
     '#type' => 'textfield',
     '#title' => 'First Name',
     '#default_value' => $user['first_name'],
     '#required' => true,    
     '#prefix'=> '<tr><td>',
     '#suffix'=> '</td>',
-  );
-  
-  $form['tadah_people']['last_name'] = array(
+    );
+
+    $form['tadah_people']['last_name'] = array(
     '#type' => 'textfield',
     '#title' => 'Last Name',
     '#default_value' => $user['last_name'],
     '#required' => true,
      '#prefix'=> '<td>',
     '#suffix'=> '</td></tr>',
-  );
-  
-  $form['tadah_people']['address1'] = array(
+    );
+
+    $form['tadah_people']['address1'] = array(
     '#type' => 'textfield',
     '#title' => 'Address 1',
     '#required' => true,
     '#default_value' => $user['address1'],
     '#prefix'=> '<tr><td>',
     '#suffix'=> '</td>',
-  );
-  
-  $form['tadah_people']['address2'] = array(
+    );
+
+    $form['tadah_people']['address2'] = array(
     '#type' => 'textfield',
     '#title' => 'Address 2',
     '#default_value' => $user['address2'],
     '#required' => false,
     '#prefix'=> '<td>',
     '#suffix'=> '</td></tr>',
-  );
-   
-  $form['tadah_people']['city'] = array(
+    );
+     
+    $form['tadah_people']['city'] = array(
     '#type' => 'textfield',
     '#title' => 'City',
     '#default_value' => $user['city'],
     '#required' => true,
     '#prefix'=> '<tr><td>',
     '#suffix'=> '</td>',
-  );
-  
-  $form['tadah_people']['state'] = array(
+    );
+
+    $form['tadah_people']['state'] = array(
     '#type' => 'textfield',
     '#title' => 'State',
     '#required' => true,
     '#default_value' => $user['state'],
      '#prefix'=> '<td>',
     '#suffix'=> '</td></tr>',
-  );
-  
-  //get country list
- if (!function_exists('country_get_list')) {
-    include DRUPAL_ROOT . '/includes/locale.inc';
-  }
-  $form['tadah_people']['country'] = array(
+    );
+
+    //get country list
+    if (!function_exists('country_get_list')) {
+      include DRUPAL_ROOT . '/includes/locale.inc';
+    }
+    $form['tadah_people']['country'] = array(
     '#type' => 'select',
     '#title' => 'Country',
     '#required' => true,
@@ -191,32 +266,32 @@ function tadah_people_attach_form(&$form, &$form_state, $uid = NULL) {
     '#options' => country_get_list(),
     '#prefix'=> '<tr><td>',
     '#suffix'=> '</td>',
-  );
-  
-  $form['tadah_people']['postal_code'] = array(
+    );
+
+    $form['tadah_people']['postal_code'] = array(
     '#type' => 'textfield',
     '#title' => 'Postal Code',
     '#default_value' => $user['postal_code'],
     '#required' => true,
     '#prefix'=> '<td>',
     '#suffix'=> '</td></tr>',
-  );
-  
-  $form['tadah_people']['aboutme'] = array(
+    );
+
+    $form['tadah_people']['aboutme'] = array(
     '#type' => 'textarea',
     '#title' => 'About Me',
     '#default_value' => $user['aboutme'],
     '#prefix'=> '<tr><td>',
     '#suffix'=> '</td>',
-  );
-  
-  $form['tadah_people']['interests'] = array(
+    );
+
+    $form['tadah_people']['interests'] = array(
     '#type' => 'textarea',
     '#title' => 'Interests',
     '#default_value' => $user['interests'],
     '#prefix'=> '<td>',
     '#suffix'=> '</td></tr></table>',
-  );
+    );
 }
 
 /**
@@ -225,7 +300,7 @@ function tadah_people_attach_form(&$form, &$form_state, $uid = NULL) {
 function tadah_people_user_insert(&$edit, $account, $category) {
   
   db_insert('tadah_people')
-    ->fields(array(
+  ->fields(array(
     'uid' => $account->uid,
     'nick_name'  => $edit['nick_name'],
     'first_name' => $edit['first_name'],
@@ -239,15 +314,15 @@ function tadah_people_user_insert(&$edit, $account, $category) {
     'aboutme'     => $edit['aboutme'],
     'postal_code'=> $edit['postal_code']
   ))
-    ->execute();
-    
+  ->execute();
+
 }
 /**
  * Implements hook_user_update
  */
 function tadah_people_user_update(&$edit, $account, $category) {
-   db_update('tadah_people')
-    ->fields(array(
+  db_update('tadah_people')
+  ->fields(array(
     'nick_name'  => $edit['nick_name'],
     'first_name' => $edit['first_name'],
     'last_name'  => $edit['last_name'],
@@ -259,9 +334,9 @@ function tadah_people_user_update(&$edit, $account, $category) {
     'interests'  => $edit['interests'],
     'aboutme'    => $edit['aboutme'],
     'postal_code'=> $edit['postal_code']
-    ))
-    ->condition('uid', $account->uid)
-    ->execute();
+  ))
+  ->condition('uid', $account->uid)
+  ->execute();
 }
 
 /**
@@ -269,9 +344,9 @@ function tadah_people_user_update(&$edit, $account, $category) {
  */
 function tadah_people_user_delete($account) {
   db_update('tadah_people')
-    ->fields(array('deleted' => 1))
-    ->condition('uid', $account->uid)
-    ->execute();
+  ->fields(array('deleted' => 1))
+  ->condition('uid', $account->uid)
+  ->execute();
 }
 
 /**

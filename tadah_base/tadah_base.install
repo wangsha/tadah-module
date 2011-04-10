@@ -1,1 +1,132 @@
-<?php ?>
+<?php 
+require_once drupal_get_path("module","tadah_base")."/tadah_base_constants.php";
+
+function tadah_base_schema() {
+  $schema = array();
+  $schema[TADAH_EXPIRE] = array(
+    'description' => 'table to record user expiring deposit.',
+    'fields' => array(
+      'id' => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+      ),
+      'uid' => array(
+        'description' => 'User drupal id',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'amount' => array(
+        'type' => 'float',
+        'not null' => TRUE,
+      ),
+      'expire_date' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'unix timestamp',
+      ),      
+      'reciprocating_gifting_id' => array(
+        'type' => 'int',
+        'size' => 'big',
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('id'),
+    'indexes' => array(
+      'uid' => array('uid')
+    ),
+  );
+  
+  $schema[TADAH_WISHLIST] = array(
+    'description' => 'table to record user wishlist',
+    'fields' => array(
+      'id' => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+      ),
+      'uid' => array(
+        'description' => 'User drupal id',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'gift_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'timestamp' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'unix timestamp',
+      ),  
+      'is_reverse' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('id'),
+    'indexes' => array(
+      'idx1' => array('uid', 'is_reverse'),
+    ),
+  );
+  
+  $schema[TADAH_GIFT_REVIEW] = array(
+    'fields' => array(
+      'id' => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+      ),
+      'gift_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'timestamp' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'unix timestamp',
+      ),  
+      'comment' => array(
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('id'),
+    'indexes' => array(
+      'gift_id' => array('gift_id'),
+    ),
+  );
+  
+  $schema[TADAH_GIFTING] = array(
+    'fields' => array(
+      'id' => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+      ),
+      'gift_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'timestamp' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'unix timestamp',
+      ),  
+      'comment' => array(
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('id'),
+    'indexes' => array(
+      'gift_id' => array('gift_id'),
+    ),
+  );
+  return $schema;
+}
+?>

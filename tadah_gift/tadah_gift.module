@@ -83,6 +83,13 @@ function tadah_gift_menu(){
     'page callback' => 'tadah_gift_add',
     'access arguments' => array('create tadah_gift'),
   );
+  $items['tadah_gift/select'] = array(
+    'title' => 'Select Gift!',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('tadah_gift_select_form'),
+    'file' => 'tadah_gift_select.inc',
+    'access arguments' => array('select tadah_gift'),
+  );
   return $items;
 }
 
