@@ -128,9 +128,9 @@ function tadah_gift_page_view($tadah_gift, $view_mode = 'full') {
 
 function tadah_gift_markup($gift_id) {
 	$gift = tadah_gift_load($gift_id);
-	$markup = '<table><tr><td><img src="'.$gift->picture_url.'" alt="'.$gift->name.'" width="160px"></td>';
+	$markup = '<table><tr><td width="160px"><img src="'.$gift->picture_url.'" alt="'.$gift->name.'" width="160px"></td>';
 	$markup .= '</td><td>';
-	$markup .= '<table><tr><td>Name</td><td><h4><b>'.$gift->name.'</b></h4>  '.l('Product Detail', $gift->detail_url).'</td></tr>';
+	$markup .= '<table><tr><td width="100px">Name</td><td><h4><b>'.$gift->name.'</b></h4>  '.l('Product Detail', $gift->detail_url).'</td></tr>';
 	$markup .= '<tr><td>Description</td><td>'.$gift->description.'</td></tr>';
 	$markup .= '<tr><td>Price</td><td>'.$gift->price.'</td></tr>';
 	$markup .= '<tr><td>Surprise Index</td><td>'.$gift->surprise_index.'</td></tr>';

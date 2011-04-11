@@ -73,7 +73,7 @@ function tadah_people_menu() {
   $items[TADAH_PEOPLE_MODULE_NAME.'/send/%/%'] = array(
     'page callback' => 'drupal_get_form',
     'page arguments' => array('tadah_people_send_form', 2,3),
-  	'title' => 'Send!',
+  	'title' => 'Send Gift',
     'file' => 'tadah_people.forms.inc',
     'access callback' => 'user_access',
     'access arguments' => array(TADAH_PEOPLE_PROFILE_VIEW_PERM),
@@ -84,8 +84,15 @@ function tadah_people_menu() {
 }
 
 function tadah_people_load($uid = NULL, $reset = FALSE) {
-
+  $uids = (isset ($uid) ? array($uid) : array());
+  $tadah_people = tadah_people_load_multiple($uids, $reset);
+  return $tadah_people ? reset ($tadah_people) : FALSE;
 }
+
+function tadah_people_load_multiple($uids = array(), $conditions = array(), $reset = FALSE) {
+	return entity_load('tadah_people', $uids, $conditions, $reset);
+}
+
 
 /**
  * Implements hook_permission
@@ -132,7 +139,6 @@ function tadah_people_user_post_render(&$html, &$build) {
   }
   $html_expiring .= '</ul>';
   $remaining = $profile['deposit'] - $total_expiring;
-  debug_base($profile, 'build');
   
   
    $html = '<table class="user-details">
