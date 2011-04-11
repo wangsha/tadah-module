@@ -126,7 +126,7 @@ function tadah_base_schema() {
         'not null' => TRUE,
         'description' => 'unix timestamp',
       ),  
-      'comment' => array(
+      'message' => array(
         'type' => 'text',
         'size' => 'big',
         'not null' => TRUE,

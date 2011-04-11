@@ -79,7 +79,22 @@ function tadah_people_menu() {
     'access arguments' => array(TADAH_PEOPLE_PROFILE_VIEW_PERM),
     'type' => MENU_CALLBACK,
   );
-  
+  $items[TADAH_PEOPLE_MODULE_NAME.'/sending'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('tadah_people_gifting_history'),
+    'file' => 'tadah_people.forms.inc',
+    'access callback' => 'user_access',
+    'access arguments' => array(TADAH_PEOPLE_PROFILE_VIEW_PERM),
+    'type' => MENU_CALLBACK,
+  );
+  $items[TADAH_PEOPLE_MODULE_NAME.'/receiving'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('tadah_people_gifting_history'),
+    'file' => 'tadah_people.forms.inc',
+    'access callback' => 'user_access',
+    'access arguments' => array(TADAH_PEOPLE_PROFILE_VIEW_PERM),
+    'type' => MENU_CALLBACK,
+  );
   return $items;
 }
 
@@ -140,8 +155,11 @@ function tadah_people_user_post_render(&$html, &$build) {
   $html_expiring .= '</ul>';
   $remaining = $profile['deposit'] - $total_expiring;
   
+  $email = user_load($profile['uid'])->mail;
+	$hash = md5( strtolower( $email ) );
+	$html = '<table><tr><td><img src="http://www.gravatar.com/avatar/'.$hash.'?s=160" width="160px"/></td>';
   
-   $html = '<table class="user-details">
+  $html .= '<td><table>
                         <tr>
                             <td style="width:120px">Nick Name</td>
                             <td style="width:230px" class="fn nickname"><b>'.$profile['nick_name'].'</b></td>
@@ -171,6 +189,7 @@ function tadah_people_user_post_render(&$html, &$build) {
                         </tr>
                     </table>
                 ';
+  $html .= '</td></tr></table>';
   return $html;
 }
 
@@ -196,7 +215,6 @@ function tadah_peope_validate_nickname($element, &$form_state) {
   ->condition('deleted', 0)
   ->execute()
   ->fetchField();
-  debug_base($nid, $uid);
   if (!empty($nid) && $nid != $uid) {
     form_error($element, t('Nick name exisits, please choose another one.'));
   }

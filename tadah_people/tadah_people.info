@@ -2,5 +2,6 @@ name = People
 description = Integrate User Registration with Tadah gift
 package = Tadah
 dependencies[] = tadah_gift
+dependencies[] = tadah_base
 
 core = 7.x

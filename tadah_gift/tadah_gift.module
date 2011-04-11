@@ -81,14 +81,14 @@ function tadah_gift_menu(){
   $items['tadah_gift/add'] = array(
     'title' => 'Add Gift!',
     'page callback' => 'tadah_gift_add',
-    'access arguments' => array('create tadah_gift'),
+    'access arguments' => array('view tadah_gifts'),
   );
   $items['tadah_gift/select'] = array(
-    'title' => 'Select Gift!',
+    'title' => 'Send Gift!',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('tadah_gift_select_form'),
     'file' => 'tadah_gift_select.inc',
-    'access arguments' => array('select tadah_gift'),
+    'access callback' => true,
   );
   return $items;
 }
@@ -101,7 +101,13 @@ function tadah_gift_permission(){
     ),
     'view tadah_gifts' => array(
       'title' => t('View tadah_gifts'),
-    )
+    ),
+    'create tadah_gift' => array(
+    	'title' => t('create tadah_gift'),
+    ),
+    'select tadah_gift' => array(
+    	'title' => t('select tadah_gift')
+    ),
   );
 }
 
@@ -121,7 +127,6 @@ function tadah_gift_page_view($tadah_gift, $view_mode = 'full') {
   field_attach_prepare_view('tadah_gift', array($tadah_gift->gift_id => $tadah_gift), $view_mode);
   entity_prepare_view('tadah_gift', array($tadah_gift->gift_id => $tadah_gift));
   $tadah_gift->content += field_attach_view('tadah_gift', $tadah_gift, $view_mode);
-  dpm($tadah_gift);
 
   return $tadah_gift->content;
 }
@@ -188,6 +193,8 @@ function tadah_gift_add_form($form, &$form_state, $tadah_gift) {
   $form['description'] = array(
     '#type' => 'textarea',
     '#title' => t('Description'),
+  	'#prefix' => '<div style="width:392px">',
+  	'#suffix' => '</div>',
     '#required' => TRUE,
   );
 
