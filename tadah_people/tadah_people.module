@@ -138,24 +138,20 @@ function tadah_people_user_view_alter(&$build) {
  * Insert user information and return a markup
  */
 function tadah_people_user_post_render(&$html, &$build) {
-  $account = $build['#account']; //object
-  $profile = $build['#tadah_profile']; //array
-  $picture = $build['user_picture']['#markup'];
-  $expires = tadah_people_get_expiring_record();
-  setlocale(LC_MONETARY, 'en_US');
-  
-  $total_expiring = 0;
-  $html_expiring = '<ul>';
-  foreach($expires as $id => $data) {
-    $days = floor(($data->expire_date - time())/3600/24);
+	$account = $build['#account']; //object
+	$profile = $build['#tadah_profile']; //array
+	$picture = $build['user_picture']['#markup'];
+	setlocale(LC_MONETARY, 'en_US');
 
-    $html_expiring .= '<li>'. money_format('%i', $data->amount) .' expire in '.$days .' days at '.date("m-d-Y", $data->expire_date). '</li>';
-    $total_expiring += $data->amount;
-  }
-  $html_expiring .= '</ul>';
-  $remaining = $profile['deposit'] - $total_expiring;
-  
-  $email = user_load($profile['uid'])->mail;
+	$expire;
+	tadah_reciprocation_html($expire);
+	if($expire['total_recv'] > $expire['total_sent']) {
+		$remaining = $profile['deposit'] - $expire['total_recv'];
+	}else{
+		$remaining = $profile['deposit'] - $expire['total_sent'];
+	}
+
+	$email = user_load($profile['uid'])->mail;
 	$hash = md5( strtolower( $email ) );
 	$html = '<table><tr><td><img src="http://www.gravatar.com/avatar/'.$hash.'?s=160" width="160px"/></td>';
   
@@ -176,21 +172,79 @@ function tadah_people_user_post_render(&$html, &$build) {
                         <tr>
                             <td>Remaining Balance</td>
                             <td><b>
-                            '. money_format('%i', $remaining).'
+                            '. money_format('%i', $profile['deposit']).'
                             </b></td>
                         </tr>
-                        
-                            
-                        <tr>
-                            <td>Expiring Balance</td>
-                            <td>
-                                '.$html_expiring.'
-                            </td>
+                         <tr>
+                            <td>Gifts Sent</td>
+                            <td><b>
+                            '. money_format('%i', $expire['total_sent']).'
+                            </b></td>
+                        </tr>
+                         <tr>
+                            <td>Gifts Received</td>
+                            <td><b>
+                            '. money_format('%i', $expire['total_recv']).'
+                            </b></td>
                         </tr>
                     </table>
                 ';
-  $html .= '</td></tr></table>';
-  return $html;
+	$html .= '</td></tr></table>';
+	$html .= $expire['markup'];
+	return $html;
+}
+
+function tadah_reciprocation_html(&$data) {
+	global $user;
+	$uid = $user->uid;
+
+	$recv_sql = "SELECT SUM(g.price) as received
+					 FROM tadah_gifting f, tadah_gift as g
+					 WHERE f.receiver = :uid AND f.gift_id = g.gift_id";
+	$sent_sql = "SELECT SUM(g.price) as sent
+					 FROM tadah_gifting f, tadah_gift as g
+					 WHERE f.sender = :uid AND f.gift_id = g.gift_id";
+
+	$result = db_query($recv_sql, array('uid'=>$uid));
+	foreach ($result as $record) {
+		$sum_recv = $record->received;
+	}
+
+	$result = db_query($sent_sql, array('uid'=>$uid));
+	foreach ($result as $record) {
+		$sum_sent = $record->sent;
+	}
+	$markup;
+	//more gifts on the way
+	if($sum_sent > $sum_recv) {
+		$last_sent_sql = "SELECT max(timestamp) as timestamp FROM tadah_gifting WHERE sender=:uid";
+		$result = db_query($last_sent_sql, array('uid' => $uid));
+		$timestamp;
+		foreach($result as $record) {
+			$timestamp = $record->timestamp;
+		}
+
+		$markup = '<div><div style="float:left"><img src="'.drupal_get_path('module', 'tadah_people').'/gift_on_the_way.jpg" width="200px"/></div>';
+		$markup .= '<div style="padding-left:215px"><span style="font-size:2em; font-weight:bold"><i>You have a gift of USD '.($sum_sent-$sum_recv);
+		$markup .=' on the way!<br><br> Latest by: '.date('d M Y', $timestamp+30*24*3600).'</i></span>';
+		$markup .= '</div></div>';
+	}else{
+		$last_recv_sql = "SELECT max(timestamp) as timestamp FROM tadah_gifting WHERE receiver=:uid";
+		$result = db_query($last_recv_sql, array('uid' => $uid));
+		$timestamp;
+		foreach($result as $record) {
+			$timestamp = $record->timestamp;
+		}
+		$expire_date = date('d M Y', $timestamp+30*24*3600);
+		$markup = '<div><div style="float:left"><img src="'.drupal_get_path('module', 'tadah_people').'/make_a_gift.png" width="200px"/></div>';
+		$markup .='<div style="padding-left:215px"><span style="font-size:1.5em; font-weight:bold;">Your account has <i>USD '.($sum_sent-$sum_recv);
+		$markup .='</i> going to expire at <i>'.$expire_date.'<br>'.l('Send a gift now!', 'tadah_gift/select').'</i></span><br>Tadah Gift will send a gift on behalf you when the money expires.</div></div>';
+
+	}
+
+	$data['total_sent'] = $sum_sent;
+	$data['total_recv'] = $sum_recv;
+	$data['markup'] = $markup;
 }
 
 /**
