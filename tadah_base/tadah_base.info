@@ -1,0 +1,5 @@
+name = Tadah Base 
+description = Tadah base module
+package = Tadah
+
+core = 7.x

@@ -16,6 +16,7 @@ function tadah_people_get_profile($uid = NULL) {
   return $profile;
 }
 
+
 function tadah_people_get_expiring_record($uid = null) {
   if(empty($uid)) {
     global $user;
